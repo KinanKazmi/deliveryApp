@@ -1,37 +1,41 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import {View} from "react-native";
+import {GestureHandlerRootView} from "react-native-gesture-handler";
+import {Drawer} from "expo-router/drawer";
+import {routes} from "./routes";
+import HeaderIcon from "@/components/drawer/HeaderIcon";
+import {CustomDrawerContent} from "@/components/drawer/CustomDrawer";
+import {appBrown} from "@/components/styles/shared";
+import {drawerStyles} from "@/components/styles/drawer";
+import RightIcons from "@/components/headerIcons/RightIcons";
 
-import { useColorScheme } from '@/hooks/useColorScheme';
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
-
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
-  }
-
+export default function Root() {
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Drawer
+				drawerContent={CustomDrawerContent}
+        screenOptions={({ route, navigation }) => ({
+          headerLeft: (props) => <HeaderIcon onPress={() => navigation.toggleDrawer()} />,
+					headerRight: (props) => route.name !== 'index' ? null : <RightIcons route={route} navigation={navigation}/>
+        })}
+      >
+        {routes.map((route) => {
+          return (
+            <Drawer.Screen
+              key={route.path}
+              name={route.path}
+              options={{
+                drawerLabel: route.label,
+                title: route.title,
+                headerTitle: route.title ? undefined : () => <View />,
+								drawerIcon: ({size, color}) => route.icon({size, color}),
+								drawerActiveTintColor: 'white',
+								drawerLabelStyle: {color: appBrown, fontSize: 12},
+								drawerItemStyle: drawerStyles.drawerItemStyle,
+              }}
+            />
+          );
+        })}
+      </Drawer>
+    </GestureHandlerRootView>
   );
 }
